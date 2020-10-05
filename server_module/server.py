@@ -1,4 +1,5 @@
 import socket
+import ssl
 
 
 class Server(object):
@@ -8,5 +9,8 @@ class Server(object):
 
 
 if __name__ == '__main__':
-    server_socket = socket.socket
-    server_socket.bind(('', 9090))
+    sock = ssl.wrap_socket(socket.socket(), 'server.key', 'server.crt', True)
+    sock.bind(('localhost', 43433))
+    sock.listen(10)
+    conn, addr = sock.accept()
+    data = conn.recv(1024)
