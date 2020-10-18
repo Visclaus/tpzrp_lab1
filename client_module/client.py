@@ -22,13 +22,14 @@ if __name__ == '__main__':
 
     if not secure_sock.getpeercert(): raise Exception("No server's certificate!")
     print("Sending image")
-    with open('to_send.jpg', 'rb') as f:
+    with open('Lenna.png', 'rb') as f:
         bytes_pack = f.read(1024)
         number = 0
         while bytes_pack:
             print("Sending #{0} package of 1024 bytes".format(number))
             secure_sock.send(bytes_pack)
             bytes_pack = f.read(1024)
+            number += 1
         print("Sending successful!")
     secure_sock.close()
     sock.close()
