@@ -1,5 +1,8 @@
 import socket
 import ssl
+import skimage
+import numpy
+import cv2
 
 if __name__ == '__main__':
 
@@ -22,7 +25,11 @@ if __name__ == '__main__':
 
     if not secure_sock.getpeercert(): raise Exception("No server's certificate!")
     print("Sending image")
-    with open('Lenna.png', 'rb') as f:
+    image = cv2.imread('Lenna.png', 1)
+    noised_image = skimage.util.random_noise(image, mode='s&p', seed=None, clip=True)
+    noised_image = numpy.array(255*noised_image, dtype='uint8')
+    cv2.imwrite("Lenna_noised.png", noised_image)
+    with open("Lenna_noised.png", 'rb') as f:
         bytes_pack = f.read(1024)
         number = 0
         while bytes_pack:

@@ -1,6 +1,8 @@
 import socket
 import ssl
 
+import cv2
+
 if __name__ == '__main__':
 
     # print(repr(secure_sock.getpeername()))
@@ -20,18 +22,24 @@ if __name__ == '__main__':
                                   keyfile="server.key", cert_reqs=ssl.CERT_REQUIRED,
                                   ssl_version=ssl.PROTOCOL_TLSv1_2)
 
-    # verify client
     if not secure_sock.getpeercert(): raise Exception("No client's certificate!")
-    with open("received.jpg", 'wb') as f:
-        while True:
-            print("Receiving image!")
+    f = open("received.png", 'wb')
+    while True:
+        print("Receiving image!")
+        try:
             bytes_pack = secure_sock.recv(1024)
-            number = 1
-            while bytes_pack:
-                print("Receiving #{0} package of 1024 bytes".format(number))
-                f.write(bytes_pack)
-                bytes_pack = secure_sock.recv(1024)
-                number += 1
-            print("Receiving successful!")
-            secure_sock.close()
-            server_socket.close()
+        except Exception:
+            raise Exception("Server stopped")
+        number = 1
+        while bytes_pack:
+            print("Receiving #{0} package of 1024 bytes".format(number))
+            f.write(bytes_pack)
+            bytes_pack = secure_sock.recv(1024)
+            number += 1
+        print("Receiving successful!")
+        secure_sock.close()
+        server_socket.close()
+        f.close()
+        img = cv2.imread('received.png')
+        dst = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
+        cv2.imwrite("Lenna_filtered.png", dst)
