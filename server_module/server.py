@@ -2,6 +2,8 @@ import socket
 import ssl
 
 import cv2
+import numpy
+from skimage.restoration import denoise_tv_chambolle
 
 if __name__ == '__main__':
 
@@ -24,22 +26,19 @@ if __name__ == '__main__':
 
     if not secure_sock.getpeercert(): raise Exception("No client's certificate!")
     f = open("received.png", 'wb')
-    while True:
+    bytes_pack = secure_sock.recv(1024)
+    number = 1
+    while bytes_pack:
         print("Receiving image!")
-        try:
-            bytes_pack = secure_sock.recv(1024)
-        except Exception:
-            raise Exception("Server stopped")
-        number = 1
-        while bytes_pack:
-            print("Receiving #{0} package of 1024 bytes".format(number))
-            f.write(bytes_pack)
-            bytes_pack = secure_sock.recv(1024)
-            number += 1
-        print("Receiving successful!")
-        secure_sock.close()
-        server_socket.close()
-        f.close()
-        img = cv2.imread('received.png')
-        dst = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)
-        cv2.imwrite("Lenna_filtered.png", dst)
+        print("Receiving #{0} package of 1024 bytes".format(number))
+        f.write(bytes_pack)
+        bytes_pack = secure_sock.recv(1024)
+        number += 1
+    print("Receiving successful!")
+    secure_sock.close()
+    server_socket.close()
+    f.close()
+    img = cv2.imread('received.png')
+    dst = denoise_tv_chambolle(img, weight=0.2, multichannel=True)
+    dst = numpy.array(255 * dst, dtype='uint8')
+    cv2.imwrite("Lenna_filtered.png", dst)
