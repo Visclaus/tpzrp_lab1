@@ -1,3 +1,4 @@
+import os
 import socket
 import ssl
 
@@ -6,10 +7,6 @@ import numpy
 from skimage.restoration import denoise_tv_chambolle
 
 if __name__ == '__main__':
-
-    # print(repr(secure_sock.getpeername()))
-    # print(secure_sock.cipher())
-    # print(cert)
 
     host_ip = '127.0.0.1'
     port = 1234
@@ -24,7 +21,10 @@ if __name__ == '__main__':
                                   keyfile="server.key", cert_reqs=ssl.CERT_REQUIRED,
                                   ssl_version=ssl.PROTOCOL_TLSv1_2)
 
-    if not secure_sock.getpeercert(): raise Exception("No client's certificate!")
+    if not secure_sock.getpeercert():
+        raise Exception("No client's certificate!")
+    raw_size = secure_sock.recv(10)
+    img_size = int.from_bytes(raw_size, byteorder='big', signed=True)
     f = open("received.png", 'wb')
     bytes_pack = secure_sock.recv(1024)
     number = 1
@@ -35,9 +35,13 @@ if __name__ == '__main__':
         bytes_pack = secure_sock.recv(1024)
         number += 1
     print("Receiving successful!")
+
     secure_sock.close()
     server_socket.close()
     f.close()
+    recv_img_size = os.path.getsize('received.png')
+    if img_size == recv_img_size:
+        print("Success! Images are equal!")
     img = cv2.imread('received.png')
     dst = denoise_tv_chambolle(img, weight=0.2, multichannel=True)
     dst = numpy.array(255 * dst, dtype='uint8')
